@@ -10,6 +10,7 @@ attrcolor b ".I"
 #defbce "on"
 
 # Enable 256 color term
+altscreen on
 term xterm-256color
 
 # Cache 50000 lines for scroll back
@@ -22,3 +23,9 @@ hardstatus string '%{= Kd} %{= Kd}%-w%{= Kr}[%{= KW}%n %t%{= Kr}]%{= Kd}%+w %-= 
 startup_message off
 
 shell -$SHELL
+
+screen -t shell
+screen -t shell
+screen -t foobar
+select 2
+stuff "cd ~/workspace/foobar && clear^M"
