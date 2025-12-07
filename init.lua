@@ -6,6 +6,8 @@
 -- mkdir ~/.config/nvim
 -- cp init.lua ~/.config/nvim/init.lu
 -- Then open nvim and run :PackerSync
+-- To test for errors:
+-- nvim --clean -c 'luafile ~/.config/nvim/init.lua' -c quit
 
 -- Disable deprecation warnings
 vim.deprecate = function() end
@@ -20,20 +22,48 @@ if fn.empty(fn.glob(install_path)) > 0 then
 end
 
 require('packer').startup(function(use)
-  use 'wbthomason/packer.nvim'            -- plugin manager
-  use 'editorconfig/editorconfig-vim'    -- preserve editorconfig
-  use 'nvim-treesitter/nvim-treesitter'  -- modern parsing & indentation
-  use 'neovim/nvim-lspconfig'            -- LSP config
-  use 'nvimtools/none-ls.nvim'
-  use 'mfussenegger/nvim-lint'           -- lint integration (flake8)
-  use 'nvim-telescope/telescope.nvim'    -- fuzzy finder (replaces ctrlp)
-  use {'nvim-lua/plenary.nvim'}          -- dependency
-  use 'nvim-lualine/lualine.nvim'        -- statusline (you requested Lualine)
-  use 'numToStr/Comment.nvim'            -- replaces NERDCommenter
-  use 'catppuccin/nvim'                  -- example modern colorscheme (changeable)
+  use 'wbthomason/packer.nvim'
+  use 'editorconfig/editorconfig-vim'
+  use 'nvim-treesitter/nvim-treesitter'
+  use 'neovim/nvim-lspconfig'
+  use 'mfussenegger/nvim-lint'
+  use 'nvim-telescope/telescope.nvim'
+  use {'nvim-lua/plenary.nvim'}
+  use 'nvim-lualine/lualine.nvim'
+  use 'numToStr/Comment.nvim'
+  use 'catppuccin/nvim'
   use "williamboman/mason.nvim"
-  use "williamboman/mason-lspconfig.nvim"
-  -- add any additional plugins you want here
+  use "williamboman/mason-lspconfig.nvim" -- No comma needed here if next line starts with 'use'
+
+  -- The fixed, complex block for null-ls:
+  use {
+    'nvimtools/none-ls.nvim',
+    config = function()
+      local none_ls = require("null-ls")
+
+      none_ls.setup({
+        sources = {
+          -- Python (Ruff recommended)
+          none_ls.builtins.diagnostics.ruff,
+          none_ls.builtins.formatting.ruff,
+
+          -- Optional Python tools
+          none_ls.builtins.formatting.black,
+          none_ls.builtins.formatting.isort,
+
+          -- Lua
+          none_ls.builtins.formatting.stylua,
+
+          -- Shell (Corrected configuration with filetype limit)
+          none_ls.builtins.diagnostics.shellcheck:with({
+            filetypes = { "sh", "bash", "zsh", "fish" }
+          }),
+          none_ls.builtins.formatting.shfmt,
+        },
+      })
+    end
+  }
+  -- The closing 'end)' for the function and the 'startup' call
 end)
 
 -- Basic options (preserve from your .vimrc)
@@ -66,32 +96,24 @@ require('nvim-treesitter.configs').setup {
 local lspconfig = require('lspconfig')
 lspconfig.pyright.setup({})
 
--- null-ls (formatters + linters)
-local none_ls = require("null-ls")
-
-none_ls.setup({
-    sources = {
-        -- Python (Ruff recommended)
-        none_ls.builtins.diagnostics.ruff,
-        none_ls.builtins.formatting.ruff,
-
-        -- Optional Python tools
-        none_ls.builtins.formatting.black,
-        none_ls.builtins.formatting.isort,
-
-        -- Lua
-        none_ls.builtins.formatting.stylua,
-
-        -- Shell
-        none_ls.builtins.diagnostics.shellcheck,
-        none_ls.builtins.formatting.shfmt,
-    },
-})
-
 -- nvim-lint setup for on-save linting if you want (optional)
 require('lint').linters_by_ft = {
   python = {'flake8'},
 }
+
+-- Auto-show diagnostic float on CursorHold
+vim.o.updatetime = 300
+vim.api.nvim_create_autocmd({"CursorHold", "CursorHoldI"}, {
+  callback = function()
+    local opts = {
+      focusable = false,
+      close_events = { "BufLeave", "CursorMoved", "InsertEnter", "FocusLost" },
+      scope = "cursor",
+      source = "if_many",
+    }
+    vim.diagnostic.open_float(nil, opts)
+  end,
+})
 
 vim.cmd [[
   augroup LintOnSave
