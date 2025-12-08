@@ -33,9 +33,7 @@ require('packer').startup(function(use)
   use 'numToStr/Comment.nvim'
   use 'catppuccin/nvim'
   use "williamboman/mason.nvim"
-  use "williamboman/mason-lspconfig.nvim" -- No comma needed here if next line starts with 'use'
-
-  -- The fixed, complex block for null-ls:
+  use "williamboman/mason-lspconfig.nvim"
   use {
     'nvimtools/none-ls.nvim',
     config = function()
@@ -44,7 +42,9 @@ require('packer').startup(function(use)
       none_ls.setup({
         sources = {
           -- Python (Ruff recommended)
-          none_ls.builtins.diagnostics.ruff,
+          none_ls.builtins.diagnostics.ruff:with({
+            args = { "--ignore", "E501" }
+          }),
           none_ls.builtins.formatting.ruff,
 
           -- Optional Python tools
