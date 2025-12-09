@@ -101,6 +101,8 @@ require('lint').linters_by_ft = {
   python = {'flake8'},
 }
 
+require('lint').linters.flake8.args = { "--ignore=E501" }
+
 -- Auto-show diagnostic float on CursorHold
 vim.o.updatetime = 300
 vim.api.nvim_create_autocmd({"CursorHold", "CursorHoldI"}, {
